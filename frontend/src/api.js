@@ -1,8 +1,8 @@
 import axios from "axios";
 
-// Используем переменную окружения для API URL
-// При сборке Vite заменит import.meta.env.VITE_API_URL
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// Используем относительный путь для API
+// Запросы будут идти на тот же домен, где размещен frontend
+const API_URL = "/api";
 
 export const api = axios.create({
   baseURL: API_URL,
