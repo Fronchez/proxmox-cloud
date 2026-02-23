@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17
+    container_name: proxmox-db
+    restart: always
+    environment:
+      POSTGRES_USER: proxmox
+      POSTGRES_PASSWORD: proxmox
+      POSTGRES_DB: proxmox
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proxmox -d proxmox"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: proxmox-api
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://proxmox:proxmox@db/proxmox
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  bot:
+    build: ./backend
+    container_name: proxmox-bot
+    command: python -m app.bot
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://proxmox:proxmox@db/proxmox
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('healthy')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=http://backend:8000
+    container_name: proxmox-web
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:
