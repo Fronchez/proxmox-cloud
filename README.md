@@ -16,7 +16,7 @@
 
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/YOUR_USERNAME/proxmox-cloud.git
+git clone https://github.com/Fronchez/proxmox-cloud.git
 cd proxmox-cloud
 
 # Создать файл окружения
@@ -133,7 +133,6 @@ npm run dev
 - Смените `SECRET_KEY` в production
 - Используйте HTTPS для продакшена
 - Ограничьте CORS в `main.py` для конкретных доменов
-- Не коммитьте `.env` файл в git
 
 ## Устранение проблем
 
